@@ -1,7 +1,7 @@
-let tracks = [];
+let baseTrack;        // The office baseline sound
+let overlayTracks = []; 
 let nodes = [];
 let activeZoneY = 200;
-
 let soundFiles = [
   'office-bird-typing-1.wav',
   'office-bird-typing.wav',
@@ -12,19 +12,22 @@ let soundFiles = [
 ];
 
 function preload() {
-  // Load each sound file using Tone.js Player
+  // Load base office sound (ambient)
+  baseTrack = new Tone.Player('sounds/office_seg073.wav').toDestination();
+  baseTrack.loop = true;
+
+  // Load overlay tracks (nature-inspired layers)
   for (let i = 0; i < soundFiles.length; i++) {
     let player = new Tone.Player(`sounds/${soundFiles[i]}`).toDestination();
     player.loop = true;
-    tracks.push(player);
+    overlayTracks.push(player);
 
-    // Create draggable nodes
-    nodes.push({
-      x: 150 * (i + 1),
-      y: 400,
-      r: 30,
-      dragging: false,
-      trackIndex: i
+    nodes.push({ 
+      x: 100 * (i + 1), 
+      y: 400, 
+      r: 30, 
+      dragging: false, 
+      trackIndex: i 
     });
   }
 }
@@ -33,39 +36,48 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   textAlign(CENTER, CENTER);
   textSize(14);
+
+  let startButton = createButton("Start Audio");
+  startButton.position(20, 20);
+  startButton.mousePressed(() => {
+    Tone.start();
+    if (baseTrack.state !== "started") baseTrack.start();
+  });
 }
 
 function draw() {
   background(20);
 
-  // Draw activation zone
+  // Draw zones
   noStroke();
   fill(50);
   rect(0, 0, width, activeZoneY);
   fill(30);
   rect(0, activeZoneY, width, height - activeZoneY);
 
-  // Draw and control nodes
+  // Draw nodes and handle volume mixing
   for (let node of nodes) {
     fill(255, 150);
     ellipse(node.x, node.y, node.r * 2);
     fill(255);
-    text(soundFiles[node.trackIndex], node.x, node.y + 40);
+    text(`Track ${node.trackIndex + 1}`, node.x, node.y);
 
-    // Map vertical position to volume
+    // Map vertical position to volume (-40 dB to 0 dB)
     let vol = map(constrain(node.y, 0, activeZoneY), activeZoneY, 0, -40, 0);
-    tracks[node.trackIndex].volume.value = vol;
+    overlayTracks[node.trackIndex].volume.value = vol;
 
-    // Start or stop playback based on node position
+    // Start or stop overlay track
     if (node.y < activeZoneY) {
-      if (tracks[node.trackIndex].state !== "started") tracks[node.trackIndex].start();
+      if (overlayTracks[node.trackIndex].state !== "started") 
+        overlayTracks[node.trackIndex].start();
     } else {
-      if (tracks[node.trackIndex].state === "started") tracks[node.trackIndex].stop();
+      if (overlayTracks[node.trackIndex].state === "started") 
+        overlayTracks[node.trackIndex].stop();
     }
   }
 
   fill(255);
-  text("Drag nodes up to activate sound (volume increases as you move higher)", width / 2, 20);
+  text("Drag nodes up to add layers over the baseline office sound", width / 2, 20);
 }
 
 function mousePressed() {
