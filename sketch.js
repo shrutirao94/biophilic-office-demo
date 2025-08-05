@@ -5,11 +5,9 @@ let activeZoneY = 200;
 let started = false;
 
 function preload() {
-  // Load office base sound
   officeTrack = new Tone.Player("sounds/office_seg073.wav").toDestination();
   officeTrack.loop = true;
 
-  // Load 6 nature-like tracks
   const soundFiles = [
     "sounds/office-bird-typing.wav",
     "sounds/office-bird-typing-1.wav",
@@ -22,11 +20,11 @@ function preload() {
   for (let i = 0; i < soundFiles.length; i++) {
     let player = new Tone.Player(soundFiles[i]).toDestination();
     player.loop = true;
-    player.volume.value = -100; // start muted
+    player.volume.value = -100;
     tracks.push(player);
 
     nodes.push({
-      x: 150 * (i + 1),  // horizontal position fixed
+      x: 150 * (i + 1),
       baseX: 150 * (i + 1),
       y: 400,
       r: 30,
@@ -44,55 +42,62 @@ function setup() {
 }
 
 function draw() {
-  background(20);
+  // Dynamic background based on active nodes
+  let activeCount = nodes.filter(n => n.y < activeZoneY).length;
+  let bgColor = lerpColor(color(30), color(20, 80, 40), activeCount / nodes.length);
+  setGradient(bgColor);
 
-  // Draw activation zone
-  fill(50);
+  // Draw activation zone with glow
+  noStroke();
+  fill(60, 80, 100, 120);
   rect(0, 0, width, activeZoneY);
-  fill(30);
-  rect(0, activeZoneY, width, height - activeZoneY);
 
   // Draw draggable nodes
   for (let node of nodes) {
-    fill(255, 150);
+    let isActive = node.y < activeZoneY;
+
+    if (isActive) {
+      fill(100, 255, 100, 180); // active green
+      stroke(180, 255, 180, 200);
+      strokeWeight(2);
+    } else {
+      fill(255, 150);
+      noStroke();
+    }
+
     ellipse(node.x, node.y, node.r * 2);
+
     fill(255);
-    text(`Track ${node.trackIndex + 1}`, node.x, node.y);
+    noStroke();
+    text(`Track ${node.trackIndex + 1}`, node.x, node.y + node.r + 15);
 
     if (started) {
-      // Map Y-position to volume
       let vol = map(constrain(node.y, 0, activeZoneY), activeZoneY, 0, -40, 0);
       tracks[node.trackIndex].volume.value = vol;
 
-      // Start or stop playback
-      if (node.y < activeZoneY) {
-        if (tracks[node.trackIndex].state !== "started") tracks[node.trackIndex].start();
-      } else {
-        if (tracks[node.trackIndex].state === "started") tracks[node.trackIndex].stop();
-      }
+      if (isActive && tracks[node.trackIndex].state !== "started") tracks[node.trackIndex].start();
+      if (!isActive && tracks[node.trackIndex].state === "started") tracks[node.trackIndex].stop();
     }
   }
 
-  // Manage office track fade logic
+  // Manage office track fade
   if (started) {
-    if (anyTrackActive()) {
-      fadeOutOfficeTrack();
-    } else {
-      fadeInOfficeTrack();
-    }
+    if (anyTrackActive()) fadeOutOfficeTrack();
+    else fadeInOfficeTrack();
   }
 
+  // Status text
   fill(255);
+  textSize(16);
   if (!started) {
-    text("Click anywhere to start audio", width / 2, 20);
+    text("Click to start audio", width / 2, 20);
   } else {
-    text("Drag circles up to activate sounds", width / 2, 20);
+    text(anyTrackActive() ? "Nature Blending Active" : "Office Ambience", width / 2, 20);
   }
 }
 
 function mousePressed() {
   if (!started) {
-    // Start Tone context and all sounds
     Tone.start().then(() => {
       console.log("Audio started");
       started = true;
@@ -100,7 +105,6 @@ function mousePressed() {
     });
   }
 
-  // Dragging nodes
   for (let node of nodes) {
     if (dist(mouseX, mouseY, node.x, node.y) < node.r) {
       node.dragging = true;
@@ -115,7 +119,6 @@ function mouseReleased() {
 function mouseDragged() {
   for (let node of nodes) {
     if (node.dragging) {
-      // Restrict dragging vertically only
       node.y = mouseY;
       node.x = node.baseX;
     }
@@ -125,22 +128,26 @@ function mouseDragged() {
 function initAudio() {
   officeTrack.start();
   officeTrack.volume.value = 0;
-  console.log("Office track playing");
 }
 
 function fadeOutOfficeTrack() {
-  if (officeTrack.volume.value > -40) {
-    officeTrack.volume.rampTo(-40, 1.5); // fade out
-  }
+  if (officeTrack.volume.value > -40) officeTrack.volume.rampTo(-40, 1.5);
 }
 
 function fadeInOfficeTrack() {
-  if (officeTrack.volume.value < 0) {
-    officeTrack.volume.rampTo(0, 1.5); // fade in
-  }
+  if (officeTrack.volume.value < 0) officeTrack.volume.rampTo(0, 1.5);
 }
 
 function anyTrackActive() {
   return nodes.some(node => node.y < activeZoneY);
+}
+
+function setGradient(bgColor) {
+  for (let y = 0; y < height; y++) {
+    let inter = map(y, 0, height, 0, 1);
+    let c = lerpColor(bgColor, color(10), inter);
+    stroke(c);
+    line(0, y, width, y);
+  }
 }
 
