@@ -1,0 +1,11 @@
+file 'sounds/office/office_seg001.wav'
+file 'sounds/office/office_seg002.wav'
+file 'sounds/office/office_seg003.wav'
+file 'sounds/office/office_seg004.wav'
+file 'sounds/office/office_seg005.wav'
+file 'sounds/office/office_seg006.wav'
+file 'sounds/office/office_seg007.wav'
+file 'sounds/office/office_seg008.wav'
+file 'sounds/office/office_seg009.wav'
+file 'sounds/office/office_seg010.wav'
+

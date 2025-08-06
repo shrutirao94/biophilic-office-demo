@@ -1,0 +1,5 @@
+file 'sounds-1/wind1.wav'
+file 'sounds-1/wind2.wav'
+file 'sounds-1/wind3.wav'
+file 'sounds-1/wind4.wav'
+

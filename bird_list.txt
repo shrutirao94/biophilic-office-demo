@@ -1,0 +1,5 @@
+file 'sounds-1/bird1.wav'
+file 'sounds-1/bird2.wav'
+file 'sounds-1/bird3.wav'
+file 'sounds-1/bird4.wav'
+
